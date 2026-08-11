@@ -1,0 +1,47 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: outbox-demo-rest
+  sql:
+    init:
+      mode: always
+  datasource:
+    url: jdbc:postgresql://localhost:5432/outbox
+    username: outbox
+    password: outbox
+
+outbox:
+  enabled: true
+  instance-id: ${HOSTNAME:demo-rest}
+  defaults:
+    persistence:
+      schema:
+        mode: create
+    publisher:
+      max-retries: 3
+    recovery:
+      interval: 5s
+  channels:
+    payments:
+      persistence:
+        table-name: outbox_events_payments
+      queue:
+        capacity: 5000
+    webhooks:
+      persistence:
+        table-name: outbox_events_webhooks
+      publisher:
+        max-retries: 3
+        lease-duration: 60s
+
+demo:
+  webhook:
+    url: http://localhost:8089/hooks/payments
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus

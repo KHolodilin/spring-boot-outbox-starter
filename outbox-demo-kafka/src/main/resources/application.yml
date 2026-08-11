@@ -1,0 +1,33 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: outbox-demo-kafka
+  sql:
+    init:
+      mode: always
+  datasource:
+    url: jdbc:postgresql://localhost:5432/outbox
+    username: outbox
+    password: outbox
+
+outbox:
+  enabled: true
+  instance-id: ${HOSTNAME:demo-kafka}
+  defaults:
+    persistence:
+      schema:
+        mode: create
+    recovery:
+      interval: 5s
+
+demo:
+  kafka:
+    topic: payments.events
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
