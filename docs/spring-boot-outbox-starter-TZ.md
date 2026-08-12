@@ -60,7 +60,7 @@ channel → table → dispatch queue → publisher worker → OutboxSink
 | GitHub repo | `spring-boot-outbox-starter` |
 | Parent GAV | `com.kholodilin:spring-boot-outbox-starter-parent` |
 | Starter artifact | `com.kholodilin:spring-boot-outbox-starter` |
-| First version | `0.1.0-SNAPSHOT` → `0.1.0` |
+| First version | `0.1.0-SNAPSHOT` in POMs; README / Maven Central use `0.1.0` on release |
 
 ---
 

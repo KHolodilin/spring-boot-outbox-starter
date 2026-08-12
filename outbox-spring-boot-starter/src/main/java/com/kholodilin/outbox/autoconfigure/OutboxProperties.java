@@ -8,13 +8,37 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * Root configuration under {@code outbox.*}.
+ * <p>
+ * Empty {@link #channels} creates an implicit channel named {@code default}
+ * (table {@code outbox_events}). Named channels each get their own table, queue,
+ * publisher and recovery loop after merging with {@link #defaults}.
  */
 @ConfigurationProperties(prefix = "outbox")
 public class OutboxProperties {
 
+    /**
+     * Master switch. When {@code false}, the starter does not register outbox beans.
+     * Property: {@code outbox.enabled}.
+     */
     private boolean enabled = true;
+
+    /**
+     * Publisher / recovery instance id used for row leases ({@code locked_by}).
+     * Prefer a unique value per pod (e.g. {@code ${HOSTNAME}}).
+     * Property: {@code outbox.instance-id}.
+     */
     private String instanceId = "local";
+
+    /**
+     * Defaults merged into every channel (and into the implicit {@code default} channel).
+     * Property prefix: {@code outbox.defaults.*}.
+     */
     private Defaults defaults = new Defaults();
+
+    /**
+     * Named channels. Empty map → single implicit channel {@code default}.
+     * Property prefix: {@code outbox.channels.<name>.*}.
+     */
     private Map<String, Channel> channels = new LinkedHashMap<>();
 
     public boolean isEnabled() {
@@ -49,6 +73,7 @@ public class OutboxProperties {
         this.channels = channels;
     }
 
+    /** Shared defaults applied before per-channel overrides. */
     public static class Defaults {
         private Persistence persistence = defaultPersistence();
         private Queue queue = defaultQueue();
@@ -120,6 +145,7 @@ public class OutboxProperties {
         }
     }
 
+    /** Per-channel overrides; unset fields fall back to {@link Defaults}. */
     public static class Channel {
         private Persistence persistence = new Persistence();
         private Queue queue = new Queue();
@@ -159,8 +185,16 @@ public class OutboxProperties {
         }
     }
 
+    /** JDBC table and schema management for one channel. */
     public static class Persistence {
+
+        /**
+         * Outbox table name for this channel (table-per-channel).
+         * Default channel uses {@code outbox_events} when unset.
+         * Property: {@code outbox.channels.<name>.persistence.table-name}.
+         */
         private String tableName;
+
         private Schema schema = new Schema();
 
         public String getTableName() {
@@ -180,8 +214,15 @@ public class OutboxProperties {
         }
     }
 
+    /** How the starter treats the channel table at startup. */
     public static class Schema {
-        /** When null on a channel, falls back to defaults (then {@code validate}). */
+
+        /**
+         * Schema mode: {@code create} (run DDL), {@code validate} (fail if missing/incompatible),
+         * or {@code none} (you own migrations). When null on a channel, falls back to defaults
+         * (then {@code validate}).
+         * Property: {@code outbox.*.persistence.schema.mode}.
+         */
         private String mode;
 
         public String getMode() {
@@ -193,14 +234,46 @@ public class OutboxProperties {
         }
     }
 
+    /** Wake-up dispatch queue between after-commit and the publisher worker. */
     public static class Queue {
-        /** When null on a channel, falls back to defaults (then {@code memory}). */
+
+        /**
+         * Queue implementation: {@code memory}, {@code redis}, or {@code auto}.
+         * <ul>
+         *   <li>{@code memory} — in-process only (one JVM)</li>
+         *   <li>{@code redis} — shared wake-up; requires {@code StringRedisTemplate}</li>
+         *   <li>{@code auto} — {@code redis} if {@code StringRedisTemplate} is present, else {@code memory}</li>
+         * </ul>
+         * When null on a channel, falls back to defaults (then {@code memory}).
+         * Property: {@code outbox.*.queue.type}.
+         */
         private String type;
 
+        /**
+         * Max event ids held in the wake-up queue. When full, {@code offer} returns false
+         * and recovery must pick the row up later.
+         * Property: {@code outbox.*.queue.capacity}.
+         */
         private Integer capacity;
+
+        /**
+         * Max ids drained into one publisher batch after the first poll.
+         * Property: {@code outbox.*.queue.batch-size}.
+         */
         private Integer batchSize;
+
+        /**
+         * How long the publisher waits for the first id before looping again.
+         * Property: {@code outbox.*.queue.batch-wait}.
+         */
         private Duration batchWait;
+
+        /**
+         * Queue fill ratio in {@code [0..1]} above which health / backpressure may signal pressure.
+         * Property: {@code outbox.*.queue.usage-threshold}.
+         */
         private Double usageThreshold;
+
         private Redis redis = new Redis();
 
         public String getType() {
@@ -252,8 +325,14 @@ public class OutboxProperties {
         }
     }
 
+    /** Redis-specific wake-up queue settings (used when queue type is {@code redis} or {@code auto}→redis). */
     public static class Redis {
-        /** When null, resolved to {@code outbox:<channel>:}. */
+
+        /**
+         * Key prefix for Redis list / dedup structures.
+         * When null, resolved to {@code outbox:<channel>:}.
+         * Property: {@code outbox.*.queue.redis.key-prefix}.
+         */
         private String keyPrefix;
 
         public String getKeyPrefix() {
@@ -265,9 +344,25 @@ public class OutboxProperties {
         }
     }
 
+    /** Publisher worker that drains the queue and calls {@code OutboxSink}. */
     public static class Publisher {
+
+        /**
+         * When {@code false}, append still works but no publisher thread is started (write-only).
+         * Property: {@code outbox.*.publisher.enabled}.
+         */
         private Boolean enabled;
+
+        /**
+         * How long a claimed row stays leased to this instance ({@code locked_until}).
+         * Property: {@code outbox.*.publisher.lease-duration}.
+         */
         private Duration leaseDuration;
+
+        /**
+         * After this many failed publish attempts the row becomes {@code DEAD}.
+         * Property: {@code outbox.*.publisher.max-retries}.
+         */
         private Integer maxRetries;
 
         public Boolean getEnabled() {
@@ -295,9 +390,25 @@ public class OutboxProperties {
         }
     }
 
+    /** Periodic re-enqueue of unpublished ACTIVE rows into the same channel queue. */
     public static class Recovery {
+
+        /**
+         * When {@code false}, the recovery loop does not run for the channel.
+         * Property: {@code outbox.*.recovery.enabled}.
+         */
         private Boolean enabled;
+
+        /**
+         * Delay between recovery ticks.
+         * Property: {@code outbox.*.recovery.interval}.
+         */
         private Duration interval;
+
+        /**
+         * Max recoverable ids claimed per tick.
+         * Property: {@code outbox.*.recovery.batch-size}.
+         */
         private Integer batchSize;
 
         public Boolean getEnabled() {
