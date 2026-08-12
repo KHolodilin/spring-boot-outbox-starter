@@ -5,7 +5,7 @@ on:
     tags: [ "v*" ]
 
 permissions:
-  contents: write
+  contents: write   # create the GitHub Release
 
 jobs:
   release:
@@ -34,6 +34,9 @@ jobs:
         run: mvn -B -ntp clean verify
 
       - name: Publish to Maven Central
+        # -P release enables central-publishing + sources + GPG.
+        # maven.test.skip skips re-running tests on the deploy invocation.
+        # Demo modules set maven.deploy.skip / skipPublishing and are not published.
         run: mvn -B -ntp deploy -P release -Dmaven.test.skip=true
         env:
           MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
@@ -44,6 +47,7 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           generate_release_notes: true
+          # Main artifacts only (exclude tests/sources/javadoc left from verify).
           files: |
             outbox-core/target/outbox-core-*.jar
             !outbox-core/target/*-tests.jar

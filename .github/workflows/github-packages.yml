@@ -25,6 +25,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
+        # workflow_dispatch: checkout the selected branch (main) so packaging config exists
+        # even when republishing an older tag. Tag push: default checkout is the tagged commit.
         uses: actions/checkout@v7
 
       - name: Set up JDK 21
@@ -76,6 +78,8 @@ jobs:
         run: mvn -B -ntp clean verify
 
       - name: Publish to GitHub Packages
+        # github-packages: distributionManagement for maven.pkg.github.com.
+        # Do not activate -P release here — that enables central-publishing-maven-plugin.
         run: >
           mvn -B -ntp deploy
           -P github-packages
