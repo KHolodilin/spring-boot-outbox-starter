@@ -286,9 +286,11 @@
     </build>
 
     <profiles>
+        <!-- Activated by the release workflow: sources + GPG signatures required by Maven Central -->
         <profile>
             <id>release</id>
             <properties>
+                <!-- Skip tests on publish; release.yml already ran verify before deploy. -->
                 <maven.test.skip>true</maven.test.skip>
             </properties>
             <build>
@@ -300,6 +302,7 @@
                         <extensions>true</extensions>
                         <configuration>
                             <publishingServerId>central</publishingServerId>
+                            <!-- upload + publish to Maven Central on release (release.yml only runs deploy) -->
                             <autoPublish>true</autoPublish>
                             <waitUntil>published</waitUntil>
                         </configuration>
@@ -341,6 +344,7 @@
             </build>
         </profile>
 
+        <!-- Deploy library modules to GitHub Packages (maven.pkg.github.com). -->
         <profile>
             <id>github-packages</id>
             <properties>

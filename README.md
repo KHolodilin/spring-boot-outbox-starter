@@ -1,6 +1,10 @@
-# spring-boot-outbox-starter
+# Spring Boot Outbox Starter
 
 [![CI](https://github.com/KHolodilin/spring-boot-outbox-starter/actions/workflows/ci.yml/badge.svg)](https://github.com/KHolodilin/spring-boot-outbox-starter/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/KHolodilin/spring-boot-outbox-starter/branch/main/graph/badge.svg)](https://codecov.io/gh/KHolodilin/spring-boot-outbox-starter)
+[![Maven Central](https://img.shields.io/maven-central/v/com.kholodilin/spring-boot-outbox-starter.svg?label=maven-central)](https://central.sonatype.com/artifact/com.kholodilin/spring-boot-outbox-starter)
+[![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://openjdk.org/projects/jdk/21/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
 Transactional Outbox Spring Boot starter for Java 21 / Spring Boot 4.1 with **multi-channel** pipelines, PostgreSQL as source of truth, and memory or Redis wake-up queues.
@@ -154,6 +158,49 @@ Health indicator name: `outbox` (per-channel pressure / publisher enabled).
 
 Outbox does **not** include HTTP idempotency. Compose with [`spring-boot-idempotency-starter`](https://github.com/KHolodilin/spring-boot-idempotency-starter) inside the same `@Transactional` boundary when needed.
 
+## Requirements
+
+- Java 21+
+- Spring Boot 4.x (Jackson 3)
+- PostgreSQL 13+
+- An application-provided `OutboxSink` bean (per channel when `publisher.enabled=true`)
+
+## Build
+
+```bash
+mvn clean verify     # integration tests require a running Docker daemon (Testcontainers)
+```
+
+The build enforces code format (Spotless / Palantir Java Format — run `mvn spotless:apply`
+to fix), environment constraints (Maven Enforcer), javadoc validity and a minimum of
+80% line coverage per library module (JaCoCo; the HTML report lands in
+`<module>/target/site/jacoco/index.html`).
+
+## Releasing
+
+Push a tag — CI publishes signed artifacts to **Maven Central**, mirrors them to
+**GitHub Packages**, and creates a GitHub Release:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+Required repository secrets for Maven Central (same pattern as
+[`spring-boot-idempotency-starter`](https://github.com/KHolodilin/spring-boot-idempotency-starter)):
+
+| Secret | Purpose |
+|--------|---------|
+| `MAVEN_CENTRAL_USERNAME` | Sonatype Central username |
+| `MAVEN_CENTRAL_PASSWORD` | Sonatype Central password / token |
+| `GPG_PRIVATE_KEY` | ASCII-armored GPG private key |
+| `GPG_PASSPHRASE` | GPG key passphrase |
+| `CODECOV_TOKEN` | Codecov upload (CI coverage badge) |
+
+Demo modules (`outbox-demo-kafka`, `outbox-demo-rest`) are not published (`maven.deploy.skip`).
+
+Manual republish to GitHub Packages: Actions → **GitHub Packages** → Run workflow.
+
 ## License
 
-Apache License 2.0
+Licensed under the [Apache License, Version 2.0](LICENSE).

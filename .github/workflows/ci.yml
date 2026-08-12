@@ -21,8 +21,12 @@ jobs:
           java-version: 21
           cache: maven
 
+      # fail fast on formatting before spending time on tests
       - name: Check code format (Spotless)
         run: mvn -B -ntp spotless:check
+
+      - name: Verify Docker is available
+        run: docker info
 
       - name: Build and verify
         run: mvn -B -ntp clean verify
