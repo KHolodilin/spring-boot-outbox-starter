@@ -52,7 +52,7 @@ If `outbox.channels` is empty, an implicit channel `default` (table `outbox_even
 <dependency>
   <groupId>com.kholodilin</groupId>
   <artifactId>spring-boot-outbox-starter</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>0.1.0</version>
 </dependency>
 ```
 
@@ -111,10 +111,21 @@ outbox:
   defaults:
     persistence:
       schema:
-        mode: create          # create | validate | none
+        # create  — run DDL at startup (dev/demo)
+        # validate — fail fast if the table is missing/incompatible (production)
+        # none — do nothing; you own migrations
+        mode: create
     queue:
-      type: memory            # memory | redis | auto
+      # memory — in-process queue (default; one JVM only)
+      # redis  — shared wake-up queue (requires StringRedisTemplate)
+      # auto   — redis if StringRedisTemplate is present, otherwise memory
+      type: memory
       capacity: 10000
+      batch-size: 250
+      batch-wait: 50ms
+      usage-threshold: 0.8
+      redis:
+        key-prefix: "outbox:"   # used when type is redis (or auto→redis)
     publisher:
       enabled: true
       lease-duration: 30s
@@ -133,6 +144,17 @@ outbox:
       queue:
         type: redis
 ```
+
+### Queue type: `auto`
+
+When `outbox.*.queue.type` is `auto`, the starter picks the implementation at startup:
+
+| Condition | Resolved type |
+|-----------|----------------|
+| `StringRedisTemplate` bean is in the context | `redis` |
+| otherwise | `memory` |
+
+Use `auto` when the same app sometimes runs with Redis and sometimes without. Prefer an explicit `memory` or `redis` in production so misconfiguration fails loudly (`redis` without `StringRedisTemplate` → startup failure).
 
 ## Schema
 
@@ -173,33 +195,17 @@ mvn clean verify     # integration tests require a running Docker daemon (Testco
 
 The build enforces code format (Spotless / Palantir Java Format — run `mvn spotless:apply`
 to fix), environment constraints (Maven Enforcer), javadoc validity and a minimum of
-80% line coverage per library module (JaCoCo; the HTML report lands in
+85% line coverage per library module (JaCoCo; the HTML report lands in
 `<module>/target/site/jacoco/index.html`).
 
 ## Releasing
 
-Push a tag — CI publishes signed artifacts to **Maven Central**, mirrors them to
-**GitHub Packages**, and creates a GitHub Release:
+Push a tag — CI publishes signed artifacts to Maven Central and creates a GitHub Release:
 
 ```bash
 git tag v0.1.0
 git push origin v0.1.0
 ```
-
-Required repository secrets for Maven Central (same pattern as
-[`spring-boot-idempotency-starter`](https://github.com/KHolodilin/spring-boot-idempotency-starter)):
-
-| Secret | Purpose |
-|--------|---------|
-| `MAVEN_CENTRAL_USERNAME` | Sonatype Central username |
-| `MAVEN_CENTRAL_PASSWORD` | Sonatype Central password / token |
-| `GPG_PRIVATE_KEY` | ASCII-armored GPG private key |
-| `GPG_PASSPHRASE` | GPG key passphrase |
-| `CODECOV_TOKEN` | Codecov upload (CI coverage badge) |
-
-Demo modules (`outbox-demo-kafka`, `outbox-demo-rest`) are not published (`maven.deploy.skip`).
-
-Manual republish to GitHub Packages: Actions → **GitHub Packages** → Run workflow.
 
 ## License
 

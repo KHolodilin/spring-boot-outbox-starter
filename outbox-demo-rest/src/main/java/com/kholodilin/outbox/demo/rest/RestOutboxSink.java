@@ -7,28 +7,28 @@ import com.kholodilin.outbox.model.OutboxPublishResult;
 import com.kholodilin.outbox.model.OutboxRecord;
 import com.kholodilin.outbox.spi.OutboxSink;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.http.MediaType;
+import org.springframework.web.client.RestClient;
 
 @OutboxChannelSink("webhooks")
 public class RestOutboxSink implements OutboxSink {
 
-    private final WebClient webClient;
+    private final RestClient restClient;
 
-    public RestOutboxSink(WebClient.Builder builder, @Value("${demo.webhook.url}") String webhookUrl) {
-        this.webClient = builder.baseUrl(webhookUrl).build();
+    public RestOutboxSink(@Value("${demo.webhook.url}") String webhookUrl) {
+        this.restClient = RestClient.builder().baseUrl(webhookUrl).build();
     }
 
     @Override
     public OutboxPublishResult publish(List<OutboxRecord> batch) {
         try {
             for (OutboxRecord record : batch) {
-                webClient
+                restClient
                         .post()
-                        .uri("")
-                        .bodyValue(record.payloadJson())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(record.payloadJson())
                         .retrieve()
-                        .toBodilessEntity()
-                        .block();
+                        .toBodilessEntity();
             }
             return new OutboxPublishResult.AllSucceeded();
         } catch (Exception ex) {

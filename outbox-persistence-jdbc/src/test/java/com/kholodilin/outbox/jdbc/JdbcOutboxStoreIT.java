@@ -34,6 +34,7 @@ class JdbcOutboxStoreIT {
         DataSource ds = dataSource();
         jdbc = new JdbcTemplate(ds);
         new OutboxSchemaManager(ds).apply("outbox_events_orders", OutboxChannelProperties.SchemaMode.CREATE);
+        jdbc.execute("TRUNCATE TABLE outbox_events_orders");
         store = new JdbcOutboxStore(
                 jdbc, "outbox_events_orders", "orders", JsonMapper.builder().build());
     }
@@ -67,6 +68,7 @@ class JdbcOutboxStoreIT {
     void secondTableIsIsolated() {
         DataSource ds = dataSource();
         new OutboxSchemaManager(ds).apply("outbox_events_webhooks", OutboxChannelProperties.SchemaMode.CREATE);
+        jdbc.execute("TRUNCATE TABLE outbox_events_webhooks");
         JdbcOutboxStore webhooks = new JdbcOutboxStore(
                 new JdbcTemplate(ds),
                 "outbox_events_webhooks",
@@ -76,9 +78,23 @@ class JdbcOutboxStoreIT {
         long ordersId = store.insert(new OutboxInsert("A", "1", "p", "{}", Map.of(), null));
         long webhooksId = webhooks.insert(new OutboxInsert("B", "1", "p", "{}", Map.of(), null));
 
-        assertThat(store.findByIds(List.of(ordersId))).hasSize(1);
-        assertThat(store.findByIds(List.of(webhooksId))).isEmpty();
-        assertThat(webhooks.findByIds(List.of(webhooksId))).hasSize(1);
+        assertThat(store.findByIds(List.of(ordersId)))
+                .singleElement()
+                .extracting(OutboxRecord::eventType)
+                .isEqualTo("A");
+        assertThat(webhooks.findByIds(List.of(webhooksId)))
+                .singleElement()
+                .extracting(OutboxRecord::eventType)
+                .isEqualTo("B");
+
+        // Identity sequences are per-table, so the same numeric id can exist in both tables.
+        // Isolation means each event type lives only in its own table.
+        assertThat(jdbc.queryForObject(
+                        "SELECT COUNT(*) FROM outbox_events_orders WHERE event_type = ?", Integer.class, "B"))
+                .isZero();
+        assertThat(jdbc.queryForObject(
+                        "SELECT COUNT(*) FROM outbox_events_webhooks WHERE event_type = ?", Integer.class, "A"))
+                .isZero();
     }
 
     private static DataSource dataSource() {

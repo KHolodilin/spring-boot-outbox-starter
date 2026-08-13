@@ -44,7 +44,7 @@ channel → table → dispatch queue → publisher worker → OutboxSink
 | NFR-2 | PostgreSQL как source of truth для outbox rows |
 | NFR-3 | At-least-once delivery; идемпотентность на стороне consumer/sink target |
 | NFR-4 | Multi-instance safe claim через `FOR UPDATE SKIP LOCKED` + lease |
-| NFR-5 | Line coverage ≥ 80% (JaCoCo), как в idempotency-starter |
+| NFR-5 | Line coverage ≥ 85% (JaCoCo) |
 | NFR-6 | Spotless (Palantir), enforcer, Javadoc на public API |
 | NFR-7 | Публикация: GitHub Packages + Maven Central (профиль `release`) |
 | NFR-8 | README и публичные примеры — **на английском** (как idempotency-starter) |
@@ -60,7 +60,7 @@ channel → table → dispatch queue → publisher worker → OutboxSink
 | GitHub repo | `spring-boot-outbox-starter` |
 | Parent GAV | `com.kholodilin:spring-boot-outbox-starter-parent` |
 | Starter artifact | `com.kholodilin:spring-boot-outbox-starter` |
-| First version | `0.1.0-SNAPSHOT` → `0.1.0` |
+| First version | `0.1.0-SNAPSHOT` in POMs; README / Maven Central use `0.1.0` on release |
 
 ---
 
@@ -645,7 +645,7 @@ Kafka / WebClient **не** зависимости `spring-boot-outbox-starter`.
 
 ### 13.3. Coverage
 
-- JaCoCo line ≥ **0.80** на library modules.
+- JaCoCo line ≥ **0.85** на library modules.
 - Demo: IT обязательны; `*Application` можно exclude.
 
 ---
@@ -757,7 +757,7 @@ Tracing: optional hooks; колонка `trace_parent` + поле в `OutboxReco
    ```
 
 5. Демо Kafka и REST (multi-channel) документированы и поднимаются.  
-6. Сценарии §13.2; JaCoCo ≥ 80% на library modules.  
+6. Сценарии §13.2; JaCoCo ≥ 85% на library modules.  
 7. README на английском по §14.  
 8. Нет hard-dependency на Kafka/WebClient в starter.  
 9. Idempotency не встроен; есть пример композиции.  

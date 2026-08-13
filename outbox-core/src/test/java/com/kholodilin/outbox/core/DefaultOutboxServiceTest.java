@@ -82,6 +82,53 @@ class DefaultOutboxServiceTest {
         verify(queue).offer(42L);
     }
 
+    @Test
+    void appendAcceptsStringPayloadHeadersAndTraceParent() {
+        OutboxStore store = mock(OutboxStore.class);
+        OutboxDispatchQueue queue = mock(OutboxDispatchQueue.class);
+        when(store.insert(any(OutboxInsert.class))).thenReturn(7L);
+        when(queue.offer(7L)).thenReturn(false);
+
+        DefaultOutboxChannel channel =
+                new DefaultOutboxChannel("orders", store, queue, null, props("orders", "outbox_events_orders"));
+        DefaultOutboxService service = new DefaultOutboxService(
+                new MapOutboxChannelRegistry(Map.of("orders", channel)),
+                JsonMapper.builder().build(),
+                null);
+
+        TransactionSynchronizationManager.initSynchronization();
+        TransactionSynchronizationManager.setActualTransactionActive(true);
+
+        long id = service.channel("orders")
+                .eventType("PAID")
+                .aggregateId("a")
+                .partitionKey("k")
+                .payload("{\"x\":1}")
+                .headers(Map.of("h1", "v1"))
+                .headers(null)
+                .traceParent("00-trace-01")
+                .append();
+
+        assertThat(id).isEqualTo(7L);
+        TransactionSynchronizationManager.getSynchronizations().forEach(sync -> sync.afterCommit());
+        verify(queue).offer(7L);
+    }
+
+    @Test
+    void appendRejectsBlankRequiredFields() {
+        DefaultOutboxService service = serviceWithDefault();
+        TransactionSynchronizationManager.initSynchronization();
+        TransactionSynchronizationManager.setActualTransactionActive(true);
+
+        assertThatThrownBy(() -> service.eventType(" ")
+                        .aggregateId("1")
+                        .partitionKey("k")
+                        .payload("{}")
+                        .append())
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("eventType");
+    }
+
     private static DefaultOutboxService serviceWithDefault() {
         DefaultOutboxChannel channel = new DefaultOutboxChannel(
                 "default",
