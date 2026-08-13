@@ -70,6 +70,42 @@ class PublisherWorkerTest {
         verify(store).markFailed(7L, 5, OutboxStatus.DEAD);
     }
 
+    @Test
+    void emptyPollIsNoOp() throws Exception {
+        OutboxStore store = mock(OutboxStore.class);
+        OutboxDispatchQueue queue = mock(OutboxDispatchQueue.class);
+        OutboxSink sink = mock(OutboxSink.class);
+        when(queue.poll(any())).thenReturn(null);
+
+        DefaultOutboxChannel channel = new DefaultOutboxChannel("default", store, queue, sink, props(5));
+        PublisherWorker worker = new PublisherWorker(channel, "inst-1", null);
+        worker.processOnce();
+
+        verify(store, org.mockito.Mockito.never()).claimByIds(anyList(), anyString(), any());
+    }
+
+    @Test
+    void sinkExceptionMarksFailed() throws Exception {
+        OutboxStore store = mock(OutboxStore.class);
+        OutboxDispatchQueue queue = mock(OutboxDispatchQueue.class);
+        OutboxSink sink = mock(OutboxSink.class);
+
+        OutboxRecord record =
+                new OutboxRecord("default", 3L, "ORDER_CREATED", "a1", "p1", "{}", Map.of(), null, 0, Instant.now());
+
+        when(queue.poll(any())).thenReturn(3L);
+        when(queue.drain(anyInt())).thenReturn(List.of());
+        when(store.claimByIds(anyList(), anyString(), any())).thenReturn(List.of(record));
+        when(sink.publish(anyList())).thenThrow(new RuntimeException("sink down"));
+
+        DefaultOutboxChannel channel = new DefaultOutboxChannel("default", store, queue, sink, props(5));
+        PublisherWorker worker = new PublisherWorker(channel, "inst-1", OutboxMetrics.noop());
+        worker.processOnce();
+
+        verify(store).markFailed(3L, 1, OutboxStatus.FAILED);
+        verify(queue).acknowledge(List.of(3L));
+    }
+
     private static OutboxChannelProperties props(int maxRetries) {
         return new OutboxChannelProperties(
                 "default",

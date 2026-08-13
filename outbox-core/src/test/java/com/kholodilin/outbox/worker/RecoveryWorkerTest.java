@@ -58,6 +58,57 @@ class RecoveryWorkerTest {
         verify(sink, never()).publish(anyList());
     }
 
+    @Test
+    void emptyClaimReturnsZero() {
+        OutboxStore store = mock(OutboxStore.class);
+        OutboxDispatchQueue queue = mock(OutboxDispatchQueue.class);
+        when(store.claimRecoverableIds(anyInt(), anyString(), any())).thenReturn(List.of());
+
+        DefaultOutboxChannel channel = new DefaultOutboxChannel("default", store, queue, null, props(true));
+        RecoveryWorker worker = new RecoveryWorker(channel, "inst", null);
+
+        assertThat(worker.recover()).isZero();
+        verify(store, never()).clearLease(anyList());
+    }
+
+    @Test
+    void countsOnlySuccessfulOffers() {
+        OutboxStore store = mock(OutboxStore.class);
+        OutboxDispatchQueue queue = mock(OutboxDispatchQueue.class);
+        when(store.claimRecoverableIds(anyInt(), anyString(), any())).thenReturn(List.of(1L, 2L));
+        when(store.findByIds(anyList())).thenReturn(List.of(record(1L, "A"), record(2L, "B")));
+        when(queue.offer(1L)).thenReturn(true);
+        when(queue.offer(2L)).thenReturn(false);
+
+        DefaultOutboxChannel channel = new DefaultOutboxChannel("default", store, queue, null, props(true));
+        RecoveryWorker worker = new RecoveryWorker(channel, "inst", OutboxMetrics.noop());
+
+        assertThat(worker.recover()).isEqualTo(1);
+    }
+
+    @Test
+    void startAndCloseAreIdempotent() {
+        OutboxStore store = mock(OutboxStore.class);
+        OutboxDispatchQueue queue = mock(OutboxDispatchQueue.class);
+        when(store.claimRecoverableIds(anyInt(), anyString(), any())).thenReturn(List.of());
+
+        DefaultOutboxChannel channel = new DefaultOutboxChannel("default", store, queue, null, props(true));
+        RecoveryWorker worker = new RecoveryWorker(channel, "inst", OutboxMetrics.noop());
+        worker.start();
+        worker.start();
+        worker.close();
+        worker.close();
+    }
+
+    @Test
+    void startIsNoOpWhenRecoveryDisabled() {
+        DefaultOutboxChannel channel = new DefaultOutboxChannel(
+                "default", mock(OutboxStore.class), mock(OutboxDispatchQueue.class), null, props(false));
+        RecoveryWorker worker = new RecoveryWorker(channel, "inst", OutboxMetrics.noop());
+        worker.start();
+        worker.close();
+    }
+
     private static OutboxRecord record(long id, String type) {
         return new OutboxRecord("default", id, type, "a", "p", "{}", Map.of(), null, 0, Instant.now());
     }

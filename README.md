@@ -195,7 +195,7 @@ mvn clean verify     # integration tests require a running Docker daemon (Testco
 
 The build enforces code format (Spotless / Palantir Java Format — run `mvn spotless:apply`
 to fix), environment constraints (Maven Enforcer), javadoc validity and a minimum of
-80% line coverage per library module (JaCoCo; the HTML report lands in
+85% line coverage per library module (JaCoCo; the HTML report lands in
 `<module>/target/site/jacoco/index.html`).
 
 ## Releasing
