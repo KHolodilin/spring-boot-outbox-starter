@@ -88,11 +88,14 @@
                     </execution>
                 </executions>
             </plugin>
+            <!--
+              Inherited from parent -P release (extensions). Keep skipPublishing so demos
+              never publish to Central; do NOT set extensions=true here — that injects
+              central-publishing on plain deploy (e.g. GitHub Packages workflow).
+            -->
             <plugin>
                 <groupId>org.sonatype.central</groupId>
                 <artifactId>central-publishing-maven-plugin</artifactId>
-                <version>${central-publishing-maven-plugin.version}</version>
-                <extensions>true</extensions>
                 <configuration>
                     <skipPublishing>true</skipPublishing>
                 </configuration>

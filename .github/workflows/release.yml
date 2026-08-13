@@ -43,25 +43,31 @@ jobs:
           MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
+      # softprops globs match classifiers (tests/sources/javadoc); copy main jars only.
+      - name: Collect main jars for GitHub Release
+        run: |
+          set -euo pipefail
+          mkdir -p gh-release-jars
+          for module in \
+            outbox-core \
+            outbox-persistence-jdbc \
+            outbox-queue-memory \
+            outbox-queue-redis \
+            outbox-spring-boot-starter
+          do
+            find "$module/target" -maxdepth 1 -type f -name '*.jar' \
+              ! -name '*-tests.jar' \
+              ! -name '*-sources.jar' \
+              ! -name '*-javadoc.jar' \
+              ! -name '*-exec.jar' \
+              ! -name 'original-*.jar' \
+              -exec cp -v {} gh-release-jars/ \;
+          done
+          ls -la gh-release-jars
+          test "$(find gh-release-jars -maxdepth 1 -type f -name '*.jar' | wc -l)" -ge 5
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
           generate_release_notes: true
-          # Main artifacts only (exclude tests/sources/javadoc left from verify).
-          files: |
-            outbox-core/target/outbox-core-*.jar
-            !outbox-core/target/*-tests.jar
-            !outbox-core/target/*-sources.jar
-            !outbox-core/target/*-javadoc.jar
-            outbox-persistence-jdbc/target/outbox-persistence-jdbc-*.jar
-            !outbox-persistence-jdbc/target/*-sources.jar
-            !outbox-persistence-jdbc/target/*-javadoc.jar
-            outbox-queue-memory/target/outbox-queue-memory-*.jar
-            !outbox-queue-memory/target/*-sources.jar
-            !outbox-queue-memory/target/*-javadoc.jar
-            outbox-queue-redis/target/outbox-queue-redis-*.jar
-            !outbox-queue-redis/target/*-sources.jar
-            !outbox-queue-redis/target/*-javadoc.jar
-            outbox-spring-boot-starter/target/spring-boot-outbox-starter-*.jar
-            !outbox-spring-boot-starter/target/*-sources.jar
-            !outbox-spring-boot-starter/target/*-javadoc.jar
+          files: gh-release-jars/*
