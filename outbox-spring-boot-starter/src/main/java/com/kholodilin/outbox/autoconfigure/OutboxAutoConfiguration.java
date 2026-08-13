@@ -37,7 +37,11 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import tools.jackson.databind.json.JsonMapper;
 
-@AutoConfiguration
+@AutoConfiguration(
+        afterName = {
+            "org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration",
+            "org.springframework.boot.jdbc.autoconfigure.JdbcTemplateAutoConfiguration"
+        })
 @ConditionalOnClass(DataSource.class)
 @ConditionalOnBean(DataSource.class)
 @ConditionalOnProperty(prefix = "outbox", name = "enabled", matchIfMissing = true)
