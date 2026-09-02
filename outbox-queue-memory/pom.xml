@@ -8,12 +8,13 @@
     <parent>
         <groupId>com.kholodilin</groupId>
         <artifactId>spring-boot-outbox-starter-parent</artifactId>
-        <version>0.1.0-SNAPSHOT</version>
+        <version>0.1.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>outbox-queue-memory</artifactId>
     <name>Outbox Queue Memory</name>
     <description>In-process OutboxDispatchQueue with coalesce, dedup and backpressure.</description>
+    <url>https://github.com/KHolodilin/spring-boot-outbox-starter</url>
 
     <dependencies>
         <dependency>

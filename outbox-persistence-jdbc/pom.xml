@@ -8,12 +8,13 @@
     <parent>
         <groupId>com.kholodilin</groupId>
         <artifactId>spring-boot-outbox-starter-parent</artifactId>
-        <version>0.1.0-SNAPSHOT</version>
+        <version>0.1.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>outbox-persistence-jdbc</artifactId>
     <name>Outbox Persistence JDBC</name>
     <description>PostgreSQL JDBC OutboxStore with partitioned table DDL and schema management.</description>
+    <url>https://github.com/KHolodilin/spring-boot-outbox-starter</url>
 
     <dependencies>
         <dependency>
