@@ -8,12 +8,13 @@
     <parent>
         <groupId>com.kholodilin</groupId>
         <artifactId>spring-boot-outbox-starter-parent</artifactId>
-        <version>0.1.0-SNAPSHOT</version>
+        <version>0.1.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>outbox-core</artifactId>
     <name>Outbox Core</name>
     <description>Transactional outbox domain model, SPI, fluent API, channel registry and workers.</description>
+    <url>https://github.com/KHolodilin/spring-boot-outbox-starter</url>
 
     <dependencies>
         <dependency>

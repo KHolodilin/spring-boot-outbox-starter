@@ -8,12 +8,13 @@
     <parent>
         <groupId>com.kholodilin</groupId>
         <artifactId>spring-boot-outbox-starter-parent</artifactId>
-        <version>0.1.0-SNAPSHOT</version>
+        <version>0.1.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>outbox-queue-redis</artifactId>
     <name>Outbox Queue Redis</name>
     <description>Shared Redis wake-up OutboxDispatchQueue with fail-open semantics.</description>
+    <url>https://github.com/KHolodilin/spring-boot-outbox-starter</url>
 
     <dependencies>
         <dependency>
