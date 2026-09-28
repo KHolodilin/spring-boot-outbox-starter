@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.boot.health.contributor.Status;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -20,7 +19,6 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
-import org.testcontainers.utility.DockerImageName;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -43,8 +41,7 @@ class OutboxBoot4SmokeRedisIT {
     static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:16-alpine");
 
     @Container
-    static final GenericContainer<?> REDIS =
-            new GenericContainer<>(DockerImageName.parse("redis:7-alpine")).withExposedPorts(6379);
+    static final GenericContainer<?> REDIS = OutboxSmokeSupport.redisContainer();
 
     @DynamicPropertySource
     static void props(DynamicPropertyRegistry registry) {
@@ -75,13 +72,10 @@ class OutboxBoot4SmokeRedisIT {
 
     @Test
     void payloadObjectAndStringReachSinkWithRedisCache() {
-        OutboxSmokeSupport.publishPayloadsAndAwaitSent(outboxService, sink, jdbcTemplate, transactionManager, TABLE);
         assertThat(registry.getRequired("default").queue()).isInstanceOf(RedisOutboxDispatchQueue.class);
         assertThat(cacheManager).isInstanceOf(RedisCacheManager.class);
-        Cache cache = cacheManager.getCache(OutboxSmokeSupport.CACHE_NAME);
-        assertThat(cache).isNotNull();
-        cache.put("k", "v");
-        assertThat(cache.get("k", String.class)).isEqualTo("v");
+        OutboxSmokeSupport.assertNamedCacheRoundTrip(cacheManager);
+        OutboxSmokeSupport.publishPayloadsAndAwaitSent(outboxService, sink, jdbcTemplate, transactionManager, TABLE);
         assertThat(outboxHealthIndicator.health().getStatus()).isEqualTo(Status.UP);
     }
 }
