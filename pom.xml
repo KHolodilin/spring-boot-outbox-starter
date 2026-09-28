@@ -62,7 +62,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!-- Baseline for core/jdbc/queues so Boot 3.2 (Spring 6.1) remains a real min. -->
-        <outbox.spring-framework.version>6.1.15</outbox.spring-framework.version>
+        <outbox.spring-framework.version>6.1.21</outbox.spring-framework.version>
         <outbox.spring-data-redis.version>3.2.12</outbox.spring-data-redis.version>
 
         <spring-boot.version>4.1.1</spring-boot.version>
