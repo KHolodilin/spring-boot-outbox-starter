@@ -2,7 +2,8 @@
 
 [![CI](https://github.com/KHolodilin/spring-boot-outbox-starter/actions/workflows/ci.yml/badge.svg)](https://github.com/KHolodilin/spring-boot-outbox-starter/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/KHolodilin/spring-boot-outbox-starter/branch/main/graph/badge.svg)](https://codecov.io/gh/KHolodilin/spring-boot-outbox-starter)
-[![Maven Central](https://img.shields.io/maven-central/v/com.kholodilin/spring-boot-outbox-starter.svg?label=maven-central)](https://central.sonatype.com/artifact/com.kholodilin/spring-boot-outbox-starter)
+[![Maven Central](https://img.shields.io/maven-central/v/com.kholodilin/spring-boot-outbox-starter.svg?label=boot4)](https://central.sonatype.com/artifact/com.kholodilin/spring-boot-outbox-starter)
+[![Maven Central Boot 3](https://img.shields.io/maven-central/v/com.kholodilin/spring-boot-outbox-starter-boot3.svg?label=boot3)](https://central.sonatype.com/artifact/com.kholodilin/spring-boot-outbox-starter-boot3)
 [![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://openjdk.org/projects/jdk/21/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Spring Boot 3](https://img.shields.io/badge/Spring%20Boot-3.2%2B-brightgreen.svg)](https://spring.io/projects/spring-boot)
@@ -24,12 +25,12 @@ Transactional Outbox for Java 21 with **multi-channel** pipelines, PostgreSQL as
 | `outbox-persistence-jdbc` | JDBC `OutboxStore`, partitioned DDL, schema create/validate |
 | `outbox-queue-memory` | In-process dispatch queue (default) |
 | `outbox-queue-redis` | Shared Redis wake-up queue (fail-open) |
-| `spring-boot-outbox-starter` | Boot 4.x auto-configuration, Micrometer, health |
-| `spring-boot-outbox-starter-boot3` | Boot 3.2+ auto-configuration (same properties / channels / `schema.mode`) |
+| `spring-boot-outbox-starter` | Boot 4.x auto-configuration, Jackson 3, Micrometer, health |
+| `spring-boot-outbox-starter-boot3` | Boot 3.2+ auto-configuration, Jackson 2 (same properties / channels / `schema.mode`) |
 | `outbox-demo-kafka` | Single-channel demo → Kafka (Boot 4) |
 | `outbox-demo-rest` | Dual-channel demo (`payments` + `webhooks`) (Boot 4) |
 
-Boot 3 has no demo module. Smoke ITs in both starters cover no cache, Redis cache, Caffeine cache, and Caffeine+Redis.
+Boot 3.2+ has no demo module. Smoke ITs in **both** starters cover no cache, Redis cache, Caffeine cache, and Caffeine+Redis.
 
 ## Architecture
 
@@ -191,7 +192,7 @@ Event-level metrics carry tags `channel` and `eventType`:
 - `outbox_recovery_total`
 - gauges `outbox_queue_size{channel}`, `outbox_queue_pressure{channel}`
 
-Health indicator name: `outbox` (per-channel pressure / publisher enabled).
+Health indicator name: `outbox` (per-channel pressure / publisher enabled). Boot 4 uses `spring-boot-health`; Boot 3.2+ uses Actuator `HealthIndicator`.
 
 ## Requirements
 
@@ -210,8 +211,12 @@ Breaking for anyone constructing internals with Jackson 3 `JsonMapper`: `Default
 
 ## Demo apps
 
+Boot **4.x** only (`spring-boot-outbox-starter`):
+
 - **outbox-demo-kafka** — default channel → Kafka topic `payments.events`
 - **outbox-demo-rest** — `payments` (stub sink) + `webhooks` (REST) isolation
+
+Boot **3.2+** (`spring-boot-outbox-starter-boot3`): no demo module — use the starter smoke ITs instead.
 
 ## Relationship to idempotency-starter
 
@@ -221,6 +226,9 @@ Outbox does **not** include HTTP idempotency. Compose with [`spring-boot-idempot
 
 ```bash
 mvn clean verify     # integration tests require a running Docker daemon (Testcontainers)
+# extra Boot 3 compatibility (CI also runs these):
+mvn verify -pl outbox-spring-boot-starter-boot3 -am -P boot3-34
+mvn verify -pl outbox-spring-boot-starter-boot3 -am -P boot3-latest
 ```
 
 The build enforces code format (Spotless / Palantir Java Format — run `mvn spotless:apply`

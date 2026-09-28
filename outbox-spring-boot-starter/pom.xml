@@ -13,7 +13,7 @@
 
     <artifactId>spring-boot-outbox-starter</artifactId>
     <name>Spring Boot Outbox Starter</name>
-    <description>Auto-configuration for multi-channel transactional outbox.</description>
+    <description>Auto-configuration for multi-channel transactional outbox on Spring Boot 4.x (Jackson 3).</description>
     <url>https://github.com/KHolodilin/spring-boot-outbox-starter</url>
 
     <dependencies>
