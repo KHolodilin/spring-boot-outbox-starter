@@ -76,7 +76,7 @@ jobs:
         run: mvn -B -ntp versions:set -DnewVersion="${{ steps.version.outputs.version }}" -DgenerateBackupPoms=false
 
       - name: Build and verify
-        run: mvn -B -ntp clean verify
+        run: mvn -B -ntp clean install
 
       - name: Publish to GitHub Packages
         # github-packages: distributionManagement for maven.pkg.github.com.

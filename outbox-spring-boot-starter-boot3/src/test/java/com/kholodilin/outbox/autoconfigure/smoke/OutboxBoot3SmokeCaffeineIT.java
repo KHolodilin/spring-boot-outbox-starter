@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.actuate.health.Status;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -73,10 +72,7 @@ class OutboxBoot3SmokeCaffeineIT {
         OutboxSmokeSupport.publishPayloadsAndAwaitSent(outboxService, sink, jdbcTemplate, transactionManager, TABLE);
         assertThat(registry.getRequired("default").queue()).isInstanceOf(InMemoryOutboxDispatchQueue.class);
         assertThat(cacheManager).isInstanceOf(CaffeineCacheManager.class);
-        Cache cache = cacheManager.getCache(OutboxSmokeSupport.CACHE_NAME);
-        assertThat(cache).isNotNull();
-        cache.put("k", "v");
-        assertThat(cache.get("k", String.class)).isEqualTo("v");
+        OutboxSmokeSupport.assertNamedCacheRoundTrip(cacheManager);
         assertThat(outboxHealthIndicator.health().getStatus()).isEqualTo(Status.UP);
     }
 }

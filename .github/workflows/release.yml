@@ -31,7 +31,9 @@ jobs:
         run: mvn -B -ntp versions:set -DnewVersion="${GITHUB_REF_NAME#v}" -DgenerateBackupPoms=false
 
       - name: Build and verify
-        run: mvn -B -ntp clean verify
+        # install (not verify) so outbox-core's test-jar is in the local repo if a later
+        # deploy invocation still resolves jdbc's test-scoped dependency.
+        run: mvn -B -ntp clean install
 
       - name: Publish to Maven Central
         # -P release enables central-publishing + sources + GPG.

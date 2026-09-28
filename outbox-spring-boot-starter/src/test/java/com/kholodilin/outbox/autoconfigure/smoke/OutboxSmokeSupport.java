@@ -5,12 +5,16 @@ import java.util.Map;
 
 import com.kholodilin.outbox.OutboxService;
 import com.kholodilin.outbox.model.OutboxStatus;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.postgresql.PostgreSQLContainer;
+import org.testcontainers.utility.DockerImageName;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -30,9 +34,27 @@ final class OutboxSmokeSupport {
         registry.add("outbox.defaults.recovery.enabled", () -> "false");
     }
 
+    static GenericContainer<?> redisContainer() {
+        return new GenericContainer<>(DockerImageName.parse("redis:7-alpine"))
+                .withExposedPorts(6379)
+                .waitingFor(Wait.forLogMessage(".*Ready to accept connections.*", 1));
+    }
+
     static void redis(DynamicPropertyRegistry registry, GenericContainer<?> redis) {
         registry.add("spring.data.redis.host", redis::getHost);
         registry.add("spring.data.redis.port", () -> redis.getMappedPort(6379));
+        registry.add("spring.cache.redis.time-to-live", () -> "1h");
+    }
+
+    static void assertNamedCacheRoundTrip(CacheManager cacheManager) {
+        Cache cache = cacheManager.getCache(CACHE_NAME);
+        assertThat(cache).isNotNull();
+        await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
+            cache.put("k", "v");
+            Cache.ValueWrapper wrapper = cache.get("k");
+            assertThat(wrapper).isNotNull();
+            assertThat(wrapper.get()).isEqualTo("v");
+        });
     }
 
     static void publishPayloadsAndAwaitSent(
