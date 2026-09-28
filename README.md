@@ -29,7 +29,7 @@ Transactional Outbox for Java 21 with **multi-channel** pipelines, PostgreSQL as
 | `outbox-demo-kafka` | Single-channel demo → Kafka (Boot 4) |
 | `outbox-demo-rest` | Dual-channel demo (`payments` + `webhooks`) (Boot 4) |
 
-Boot 3 has no demo module: smoke coverage lives in `spring-boot-outbox-starter-boot3` (`OutboxBoot3SmokeIT`).
+Boot 3 has no demo module. Smoke ITs in both starters cover no cache, Redis cache, Caffeine cache, and Caffeine+Redis.
 
 ## Architecture
 
