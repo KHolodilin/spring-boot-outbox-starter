@@ -31,6 +31,12 @@ jobs:
       - name: Build and verify
         run: mvn -B -ntp clean verify
 
+      - name: Verify Boot 3 starter on 3.4
+        run: mvn -B -ntp verify -pl outbox-spring-boot-starter-boot3 -am -P boot3-34
+
+      - name: Verify Boot 3 starter on latest 3.x
+        run: mvn -B -ntp verify -pl outbox-spring-boot-starter-boot3 -am -P boot3-latest
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v7
         with:

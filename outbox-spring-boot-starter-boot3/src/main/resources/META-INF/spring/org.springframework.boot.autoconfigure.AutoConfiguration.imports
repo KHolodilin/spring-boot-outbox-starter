@@ -1,0 +1,2 @@
+com.kholodilin.outbox.autoconfigure.OutboxAutoConfiguration
+com.kholodilin.outbox.autoconfigure.OutboxHealthAutoConfiguration

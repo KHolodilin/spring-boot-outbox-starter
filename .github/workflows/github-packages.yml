@@ -61,6 +61,7 @@ jobs:
             com.kholodilin.outbox-queue-memory
             com.kholodilin.outbox-queue-redis
             com.kholodilin.spring-boot-outbox-starter
+            com.kholodilin.spring-boot-outbox-starter-boot3
           )
           for pkg in "${PACKAGES[@]}"; do
             if gh api "/users/${OWNER}/packages/maven/${pkg}" >/dev/null 2>&1; then

@@ -7,6 +7,7 @@ import java.util.Map;
 import javax.sql.DataSource;
 
 import com.kholodilin.outbox.OutboxService;
+import com.kholodilin.outbox.autoconfigure.json.Jackson3OutboxJson;
 import com.kholodilin.outbox.channel.DefaultOutboxChannel;
 import com.kholodilin.outbox.channel.MapOutboxChannelRegistry;
 import com.kholodilin.outbox.channel.OutboxChannel;
@@ -19,6 +20,7 @@ import com.kholodilin.outbox.metrics.OutboxMetrics;
 import com.kholodilin.outbox.queue.memory.InMemoryOutboxDispatchQueue;
 import com.kholodilin.outbox.queue.redis.RedisOutboxDispatchQueue;
 import com.kholodilin.outbox.spi.OutboxDispatchQueue;
+import com.kholodilin.outbox.spi.OutboxJson;
 import com.kholodilin.outbox.spi.OutboxSink;
 import com.kholodilin.outbox.spi.OutboxStore;
 import com.kholodilin.outbox.worker.PublisherWorker;
@@ -50,8 +52,9 @@ public class OutboxAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    JsonMapper outboxJsonMapper() {
-        return JsonMapper.builder().build();
+    OutboxJson outboxJson(ObjectProvider<JsonMapper> jsonMapper) {
+        JsonMapper mapper = jsonMapper.getIfAvailable();
+        return new Jackson3OutboxJson(mapper == null ? JsonMapper.builder().build() : mapper);
     }
 
     @Bean
@@ -79,7 +82,7 @@ public class OutboxAutoConfiguration {
             OutboxProperties properties,
             JdbcTemplate jdbcTemplate,
             OutboxSchemaManager schemaManager,
-            JsonMapper jsonMapper,
+            OutboxJson outboxJson,
             OutboxMetrics metrics,
             ApplicationContext applicationContext,
             ObjectProvider<StringRedisTemplate> redisTemplate) {
@@ -93,7 +96,7 @@ public class OutboxAutoConfiguration {
             OutboxChannelProperties props = entry.getValue();
             schemaManager.apply(props.tableName(), props.schemaMode());
 
-            OutboxStore store = new JdbcOutboxStore(jdbcTemplate, props.tableName(), name, jsonMapper);
+            OutboxStore store = new JdbcOutboxStore(jdbcTemplate, props.tableName(), name, outboxJson);
             OutboxDispatchQueue queue = createQueue(props, redisTemplate);
             metrics.registerQueueGauges(name, queue, OutboxDispatchQueue::size, OutboxDispatchQueue::pressure);
 
@@ -120,7 +123,7 @@ public class OutboxAutoConfiguration {
         }
 
         OutboxChannelRegistry registry = new MapOutboxChannelRegistry(channels);
-        OutboxService service = new DefaultOutboxService(registry, jsonMapper, metrics);
+        OutboxService service = new DefaultOutboxService(registry, outboxJson, metrics);
         return new OutboxRuntime(registry, service, workers);
     }
 

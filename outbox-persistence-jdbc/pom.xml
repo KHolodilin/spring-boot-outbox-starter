@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.kholodilin</groupId>
         <artifactId>spring-boot-outbox-starter-parent</artifactId>
-        <version>0.1.4-SNAPSHOT</version>
+        <version>0.2.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>outbox-persistence-jdbc</artifactId>
@@ -22,8 +22,15 @@
             <artifactId>outbox-core</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.kholodilin</groupId>
+            <artifactId>outbox-core</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-jdbc</artifactId>
+            <version>${outbox.spring-framework.version}</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -71,4 +78,41 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>ban-jackson</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <bannedDependencies>
+                                    <excludes>
+                                        <exclude>tools.jackson.core:*</exclude>
+                                        <exclude>tools.jackson.databind:*</exclude>
+                                        <exclude>com.fasterxml.jackson.core:*</exclude>
+                                        <exclude>com.fasterxml.jackson.databind:*</exclude>
+                                        <exclude>com.fasterxml.jackson.dataformat:*</exclude>
+                                        <exclude>com.fasterxml.jackson.datatype:*</exclude>
+                                        <exclude>com.fasterxml.jackson.module:*</exclude>
+                                    </excludes>
+                                    <includes>
+                                        <include>*:*:*:*:test</include>
+                                    </includes>
+                                    <searchTransitive>true</searchTransitive>
+                                    <message>Jackson is forbidden in compile/runtime of this module; use OutboxJson.</message>
+                                </bannedDependencies>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

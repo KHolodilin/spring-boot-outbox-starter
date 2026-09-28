@@ -6,7 +6,6 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -14,11 +13,10 @@ import java.util.Objects;
 import com.kholodilin.outbox.model.OutboxInsert;
 import com.kholodilin.outbox.model.OutboxRecord;
 import com.kholodilin.outbox.model.OutboxStatus;
+import com.kholodilin.outbox.spi.OutboxJson;
 import com.kholodilin.outbox.spi.OutboxStore;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.json.JsonMapper;
 
 /**
  * PostgreSQL JDBC {@link OutboxStore} for a single channel table.
@@ -28,14 +26,14 @@ public final class JdbcOutboxStore implements OutboxStore {
     private final JdbcTemplate jdbcTemplate;
     private final String tableName;
     private final String channelName;
-    private final JsonMapper jsonMapper;
+    private final OutboxJson outboxJson;
     private final RowMapper<OutboxRecord> rowMapper;
 
-    public JdbcOutboxStore(JdbcTemplate jdbcTemplate, String tableName, String channelName, JsonMapper jsonMapper) {
+    public JdbcOutboxStore(JdbcTemplate jdbcTemplate, String tableName, String channelName, OutboxJson outboxJson) {
         this.jdbcTemplate = Objects.requireNonNull(jdbcTemplate, "jdbcTemplate");
         this.tableName = validateTableName(tableName);
         this.channelName = Objects.requireNonNull(channelName, "channelName");
-        this.jsonMapper = jsonMapper == null ? JsonMapper.builder().build() : jsonMapper;
+        this.outboxJson = Objects.requireNonNull(outboxJson, "outboxJson");
         this.rowMapper = this::mapRow;
     }
 
@@ -199,7 +197,7 @@ public final class JdbcOutboxStore implements OutboxStore {
             return null;
         }
         try {
-            return jsonMapper.writeValueAsString(headers);
+            return outboxJson.toJson(headers);
         } catch (Exception ex) {
             throw new IllegalArgumentException("Failed to serialize outbox headers", ex);
         }
@@ -210,11 +208,7 @@ public final class JdbcOutboxStore implements OutboxStore {
             return Map.of();
         }
         try {
-            JsonNode node = jsonMapper.readTree(json);
-            Map<String, String> map = new LinkedHashMap<>();
-            node.properties()
-                    .forEach(entry -> map.put(entry.getKey(), entry.getValue().asString()));
-            return Map.copyOf(map);
+            return outboxJson.readStringMap(json);
         } catch (Exception ex) {
             return Map.of();
         }

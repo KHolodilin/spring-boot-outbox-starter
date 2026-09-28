@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
+import com.kholodilin.outbox.SimpleOutboxJson;
 import com.kholodilin.outbox.model.OutboxInsert;
 import com.kholodilin.outbox.model.OutboxRecord;
 import com.kholodilin.outbox.model.OutboxStatus;
@@ -13,7 +14,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import tools.jackson.databind.json.JsonMapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -31,8 +31,7 @@ class JdbcOutboxStoreTest {
     @BeforeEach
     void setUp() {
         jdbc = mock(JdbcTemplate.class);
-        store = new JdbcOutboxStore(
-                jdbc, "outbox_events", "default", JsonMapper.builder().build());
+        store = new JdbcOutboxStore(jdbc, "outbox_events", "default", new SimpleOutboxJson());
     }
 
     @Test

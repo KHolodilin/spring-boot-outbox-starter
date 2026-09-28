@@ -53,7 +53,8 @@ jobs:
             outbox-persistence-jdbc \
             outbox-queue-memory \
             outbox-queue-redis \
-            outbox-spring-boot-starter
+            outbox-spring-boot-starter \
+            outbox-spring-boot-starter-boot3
           do
             find "$module/target" -maxdepth 1 -type f -name '*.jar' \
               ! -name '*-tests.jar' \
@@ -64,7 +65,7 @@ jobs:
               -exec cp -v {} gh-release-jars/ \;
           done
           ls -la gh-release-jars
-          test "$(find gh-release-jars -maxdepth 1 -type f -name '*.jar' | wc -l)" -ge 5
+          test "$(find gh-release-jars -maxdepth 1 -type f -name '*.jar' | wc -l)" -ge 6
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
