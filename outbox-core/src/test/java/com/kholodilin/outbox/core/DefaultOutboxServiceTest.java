@@ -129,6 +129,17 @@ class DefaultOutboxServiceTest {
                 .hasMessageContaining("eventType");
     }
 
+    @Test
+    void payloadObjectWrapsJsonFailures() {
+        DefaultOutboxService service = serviceWithDefault();
+        assertThatThrownBy(() -> service.eventType("X")
+                        .aggregateId("1")
+                        .partitionKey("k")
+                        .payload(new Object()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Failed to serialize outbox payload");
+    }
+
     private static DefaultOutboxService serviceWithDefault() {
         DefaultOutboxChannel channel = new DefaultOutboxChannel(
                 "default",

@@ -23,4 +23,17 @@ class Jackson3OutboxJsonTest {
     void rejectsInvalidHeadersJson() {
         assertThatThrownBy(() -> json.readStringMap("not-json")).isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    void toJsonWrapsMapperFailures() {
+        assertThatThrownBy(() -> json.toJson(new ExplodingPayload()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Failed to serialize outbox JSON");
+    }
+
+    static final class ExplodingPayload {
+        public String getName() {
+            throw new IllegalStateException("cannot serialize");
+        }
+    }
 }
