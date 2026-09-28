@@ -6,8 +6,9 @@ import java.util.List;
 import java.util.Map;
 import javax.sql.DataSource;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kholodilin.outbox.OutboxService;
-import com.kholodilin.outbox.autoconfigure.json.Jackson3OutboxJson;
+import com.kholodilin.outbox.autoconfigure.json.Jackson2OutboxJson;
 import com.kholodilin.outbox.channel.DefaultOutboxChannel;
 import com.kholodilin.outbox.channel.MapOutboxChannelRegistry;
 import com.kholodilin.outbox.channel.OutboxChannel;
@@ -37,12 +38,11 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
-import tools.jackson.databind.json.JsonMapper;
 
 @AutoConfiguration(
         afterName = {
-            "org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration",
-            "org.springframework.boot.jdbc.autoconfigure.JdbcTemplateAutoConfiguration"
+            "org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration",
+            "org.springframework.boot.autoconfigure.jdbc.JdbcTemplateAutoConfiguration"
         })
 @ConditionalOnClass(DataSource.class)
 @ConditionalOnBean(DataSource.class)
@@ -52,9 +52,9 @@ public class OutboxAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    OutboxJson outboxJson(ObjectProvider<JsonMapper> jsonMapper) {
-        JsonMapper mapper = jsonMapper.getIfAvailable();
-        return new Jackson3OutboxJson(mapper == null ? JsonMapper.builder().build() : mapper);
+    OutboxJson outboxJson(ObjectProvider<ObjectMapper> objectMapper) {
+        ObjectMapper mapper = objectMapper.getIfAvailable();
+        return new Jackson2OutboxJson(mapper == null ? new ObjectMapper() : mapper);
     }
 
     @Bean

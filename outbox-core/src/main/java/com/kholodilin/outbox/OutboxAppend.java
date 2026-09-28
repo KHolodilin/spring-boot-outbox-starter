@@ -15,7 +15,7 @@ public interface OutboxAppend {
 
     OutboxAppend payload(String json);
 
-    /** Jackson-serialize {@code value} to JSON text. */
+    /** Serialize {@code value} to JSON text via {@link com.kholodilin.outbox.spi.OutboxJson}. */
     OutboxAppend payload(Object value);
 
     OutboxAppend header(String name, String value);

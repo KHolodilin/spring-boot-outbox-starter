@@ -11,9 +11,9 @@ import com.kholodilin.outbox.channel.OutboxChannelRegistry;
 import com.kholodilin.outbox.exception.MissingOutboxTransactionException;
 import com.kholodilin.outbox.metrics.OutboxMetrics;
 import com.kholodilin.outbox.model.OutboxInsert;
+import com.kholodilin.outbox.spi.OutboxJson;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
-import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Default fluent {@link OutboxService} implementation.
@@ -23,12 +23,12 @@ public final class DefaultOutboxService implements OutboxService {
     public static final String DEFAULT_CHANNEL = "default";
 
     private final OutboxChannelRegistry registry;
-    private final JsonMapper objectMapper;
+    private final OutboxJson outboxJson;
     private final OutboxMetrics metrics;
 
-    public DefaultOutboxService(OutboxChannelRegistry registry, JsonMapper objectMapper, OutboxMetrics metrics) {
+    public DefaultOutboxService(OutboxChannelRegistry registry, OutboxJson outboxJson, OutboxMetrics metrics) {
         this.registry = Objects.requireNonNull(registry, "registry");
-        this.objectMapper = Objects.requireNonNull(objectMapper, "objectMapper");
+        this.outboxJson = Objects.requireNonNull(outboxJson, "outboxJson");
         this.metrics = metrics == null ? OutboxMetrics.noop() : metrics;
     }
 
@@ -83,8 +83,8 @@ public final class DefaultOutboxService implements OutboxService {
         @Override
         public OutboxAppend payload(Object value) {
             try {
-                this.payloadJson = objectMapper.writeValueAsString(value);
-            } catch (Exception ex) {
+                this.payloadJson = outboxJson.toJson(value);
+            } catch (RuntimeException ex) {
                 throw new IllegalArgumentException("Failed to serialize outbox payload", ex);
             }
             return this;

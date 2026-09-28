@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import javax.sql.DataSource;
 
+import com.kholodilin.outbox.SimpleOutboxJson;
 import com.kholodilin.outbox.channel.OutboxChannelProperties;
 import com.kholodilin.outbox.model.OutboxInsert;
 import com.kholodilin.outbox.model.OutboxRecord;
@@ -16,7 +17,6 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
-import tools.jackson.databind.json.JsonMapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -35,8 +35,7 @@ class JdbcOutboxStoreIT {
         jdbc = new JdbcTemplate(ds);
         new OutboxSchemaManager(ds).apply("outbox_events_orders", OutboxChannelProperties.SchemaMode.CREATE);
         jdbc.execute("TRUNCATE TABLE outbox_events_orders");
-        store = new JdbcOutboxStore(
-                jdbc, "outbox_events_orders", "orders", JsonMapper.builder().build());
+        store = new JdbcOutboxStore(jdbc, "outbox_events_orders", "orders", new SimpleOutboxJson());
     }
 
     @Test
@@ -69,11 +68,8 @@ class JdbcOutboxStoreIT {
         DataSource ds = dataSource();
         new OutboxSchemaManager(ds).apply("outbox_events_webhooks", OutboxChannelProperties.SchemaMode.CREATE);
         jdbc.execute("TRUNCATE TABLE outbox_events_webhooks");
-        JdbcOutboxStore webhooks = new JdbcOutboxStore(
-                new JdbcTemplate(ds),
-                "outbox_events_webhooks",
-                "webhooks",
-                JsonMapper.builder().build());
+        JdbcOutboxStore webhooks =
+                new JdbcOutboxStore(new JdbcTemplate(ds), "outbox_events_webhooks", "webhooks", new SimpleOutboxJson());
 
         long ordersId = store.insert(new OutboxInsert("A", "1", "p", "{}", Map.of(), null));
         long webhooksId = webhooks.insert(new OutboxInsert("B", "1", "p", "{}", Map.of(), null));

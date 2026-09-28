@@ -5,21 +5,31 @@
 [![Maven Central](https://img.shields.io/maven-central/v/com.kholodilin/spring-boot-outbox-starter.svg?label=maven-central)](https://central.sonatype.com/artifact/com.kholodilin/spring-boot-outbox-starter)
 [![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://openjdk.org/projects/jdk/21/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![Spring Boot 3](https://img.shields.io/badge/Spring%20Boot-3.2%2B-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
-Transactional Outbox Spring Boot starter for Java 21 / Spring Boot 4.1 with **multi-channel** pipelines, PostgreSQL as source of truth, and memory or Redis wake-up queues.
+Transactional Outbox for Java 21 with **multi-channel** pipelines, PostgreSQL as source of truth, and memory or Redis wake-up queues. One SPI, two Spring Boot wrappers — pick **one** starter.
+
+| artifactId | Boot | JSON |
+|---|---|---|
+| `outbox-core`, `outbox-persistence-jdbc`, queues | — | no Jackson |
+| `spring-boot-outbox-starter` | 4.1.x | Jackson 3 |
+| `spring-boot-outbox-starter-boot3` | 3.2.x (min) | Jackson 2 |
 
 ## Modules
 
 | Module | Description |
 |--------|-------------|
-| `outbox-core` | Model, SPI, fluent API, channel registry, publisher/recovery workers |
+| `outbox-core` | Model, SPI (`OutboxService` / `OutboxSink` / `OutboxJson`), fluent API, workers |
 | `outbox-persistence-jdbc` | JDBC `OutboxStore`, partitioned DDL, schema create/validate |
 | `outbox-queue-memory` | In-process dispatch queue (default) |
 | `outbox-queue-redis` | Shared Redis wake-up queue (fail-open) |
-| `spring-boot-outbox-starter` | Auto-configuration, Micrometer, health |
-| `outbox-demo-kafka` | Single-channel demo → Kafka |
-| `outbox-demo-rest` | Dual-channel demo (`payments` + `webhooks`) |
+| `spring-boot-outbox-starter` | Boot 4.x auto-configuration, Micrometer, health |
+| `spring-boot-outbox-starter-boot3` | Boot 3.2+ auto-configuration (same properties / channels / `schema.mode`) |
+| `outbox-demo-kafka` | Single-channel demo → Kafka (Boot 4) |
+| `outbox-demo-rest` | Dual-channel demo (`payments` + `webhooks`) (Boot 4) |
+
+Boot 3 has no demo module: smoke coverage lives in `spring-boot-outbox-starter-boot3` (`OutboxBoot3SmokeIT`).
 
 ## Architecture
 
@@ -48,11 +58,23 @@ If `outbox.channels` is empty, an implicit channel `default` (table `outbox_even
 
 ## Quick start
 
+**Spring Boot 4.x**
+
 ```xml
 <dependency>
   <groupId>com.kholodilin</groupId>
   <artifactId>spring-boot-outbox-starter</artifactId>
-  <version>0.1.4</version>
+  <version>0.2.0</version>
+</dependency>
+```
+
+**Spring Boot 3.2+** (do not add both starters)
+
+```xml
+<dependency>
+  <groupId>com.kholodilin</groupId>
+  <artifactId>spring-boot-outbox-starter-boot3</artifactId>
+  <version>0.2.0</version>
 </dependency>
 ```
 
@@ -171,6 +193,21 @@ Event-level metrics carry tags `channel` and `eventType`:
 
 Health indicator name: `outbox` (per-channel pressure / publisher enabled).
 
+## Requirements
+
+- Java 21+
+- Spring Boot **4.x** (`spring-boot-outbox-starter`, Jackson 3) **or** Spring Boot **3.2+** (`spring-boot-outbox-starter-boot3`, Jackson 2)
+- PostgreSQL 13+
+- An application-provided `OutboxSink` bean (per channel when `publisher.enabled=true`)
+
+Raising the Boot 3 minimum later (3.2 → 3.4) keeps the same `spring-boot-outbox-starter-boot3` artifactId; only the library version and this README change.
+
+## Compatibility (0.2.0)
+
+Public SPI is unchanged: `OutboxService` / `OutboxAppend` / `OutboxSink`, `payload(String)`, table layout.
+
+Breaking for anyone constructing internals with Jackson 3 `JsonMapper`: `DefaultOutboxService` and `JdbcOutboxStore` now take `OutboxJson`. Starter auto-config wires Jackson 3 or Jackson 2. Provide your own `OutboxJson` bean to override (`@ConditionalOnMissingBean`).
+
 ## Demo apps
 
 - **outbox-demo-kafka** — default channel → Kafka topic `payments.events`
@@ -179,13 +216,6 @@ Health indicator name: `outbox` (per-channel pressure / publisher enabled).
 ## Relationship to idempotency-starter
 
 Outbox does **not** include HTTP idempotency. Compose with [`spring-boot-idempotency-starter`](https://github.com/KHolodilin/spring-boot-idempotency-starter) inside the same `@Transactional` boundary when needed.
-
-## Requirements
-
-- Java 21+
-- Spring Boot 4.x (Jackson 3)
-- PostgreSQL 13+
-- An application-provided `OutboxSink` bean (per channel when `publisher.enabled=true`)
 
 ## Build
 
@@ -203,8 +233,8 @@ to fix), environment constraints (Maven Enforcer), javadoc validity and a minimu
 Push a tag — CI publishes signed artifacts to Maven Central and creates a GitHub Release:
 
 ```bash
-git tag v0.1.4
-git push origin v0.1.4
+git tag v0.2.0
+git push origin v0.2.0
 ```
 
 ## License

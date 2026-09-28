@@ -3,6 +3,7 @@ package com.kholodilin.outbox.core;
 import java.time.Duration;
 import java.util.Map;
 
+import com.kholodilin.outbox.SimpleOutboxJson;
 import com.kholodilin.outbox.channel.DefaultOutboxChannel;
 import com.kholodilin.outbox.channel.MapOutboxChannelRegistry;
 import com.kholodilin.outbox.channel.OutboxChannelProperties;
@@ -11,16 +12,17 @@ import com.kholodilin.outbox.exception.UnknownOutboxChannelException;
 import com.kholodilin.outbox.metrics.OutboxMetrics;
 import com.kholodilin.outbox.model.OutboxInsert;
 import com.kholodilin.outbox.spi.OutboxDispatchQueue;
+import com.kholodilin.outbox.spi.OutboxJson;
 import com.kholodilin.outbox.spi.OutboxStore;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
-import tools.jackson.databind.json.JsonMapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -61,9 +63,7 @@ class DefaultOutboxServiceTest {
         DefaultOutboxChannel channel =
                 new DefaultOutboxChannel("default", store, queue, null, props("default", "outbox_events"));
         DefaultOutboxService service = new DefaultOutboxService(
-                new MapOutboxChannelRegistry(Map.of("default", channel)),
-                JsonMapper.builder().build(),
-                OutboxMetrics.noop());
+                new MapOutboxChannelRegistry(Map.of("default", channel)), new SimpleOutboxJson(), OutboxMetrics.noop());
 
         TransactionSynchronizationManager.initSynchronization();
         TransactionSynchronizationManager.setActualTransactionActive(true);
@@ -91,10 +91,9 @@ class DefaultOutboxServiceTest {
 
         DefaultOutboxChannel channel =
                 new DefaultOutboxChannel("orders", store, queue, null, props("orders", "outbox_events_orders"));
-        DefaultOutboxService service = new DefaultOutboxService(
-                new MapOutboxChannelRegistry(Map.of("orders", channel)),
-                JsonMapper.builder().build(),
-                null);
+        OutboxJson outboxJson = mock(OutboxJson.class);
+        DefaultOutboxService service =
+                new DefaultOutboxService(new MapOutboxChannelRegistry(Map.of("orders", channel)), outboxJson, null);
 
         TransactionSynchronizationManager.initSynchronization();
         TransactionSynchronizationManager.setActualTransactionActive(true);
@@ -110,6 +109,7 @@ class DefaultOutboxServiceTest {
                 .append();
 
         assertThat(id).isEqualTo(7L);
+        verify(outboxJson, never()).toJson(org.mockito.ArgumentMatchers.any());
         TransactionSynchronizationManager.getSynchronizations().forEach(sync -> sync.afterCommit());
         verify(queue).offer(7L);
     }
@@ -137,9 +137,7 @@ class DefaultOutboxServiceTest {
                 null,
                 props("default", "outbox_events"));
         return new DefaultOutboxService(
-                new MapOutboxChannelRegistry(Map.of("default", channel)),
-                JsonMapper.builder().build(),
-                OutboxMetrics.noop());
+                new MapOutboxChannelRegistry(Map.of("default", channel)), new SimpleOutboxJson(), OutboxMetrics.noop());
     }
 
     private static OutboxChannelProperties props(String name, String table) {

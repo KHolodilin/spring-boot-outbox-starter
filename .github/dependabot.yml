@@ -5,6 +5,35 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    exclude-paths:
+      - "outbox-spring-boot-starter-boot3/**"
+    groups:
+      spring-boot4:
+        patterns:
+          - "org.springframework.boot*"
+    ignore:
+      - dependency-name: "org.springframework:spring-core"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "org.springframework:spring-tx"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "org.springframework:spring-jdbc"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "org.springframework.data:spring-data-redis"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+
+  - package-ecosystem: maven
+    directory: "/outbox-spring-boot-starter-boot3"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+    groups:
+      spring-boot3:
+        patterns:
+          - "org.springframework.boot*"
+          - "com.fasterxml.jackson*"
+    ignore:
+      - dependency-name: "org.springframework.boot:*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
 
   - package-ecosystem: github-actions
     directory: "/"

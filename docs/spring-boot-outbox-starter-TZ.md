@@ -1,15 +1,16 @@
 # Техническое задание: `spring-boot-outbox-starter`
 
-**Версия документа:** 1.2  
+**Версия документа:** 1.3  
 **Статус:** Draft  
 **Целевой репозиторий:** [отдельный] `https://github.com/KHolodilin/spring-boot-outbox-starter`  
-**Стек:** Java 21, Spring Boot 4.1, Maven, PostgreSQL  
+**Стек:** Java 21, Spring Boot 4.1 / 3.2+, Maven, PostgreSQL  
 **Связанные проекты:**
 - [`spring-boot-idempotency-starter`](https://github.com/KHolodilin/spring-boot-idempotency-starter) — отдельно; не входит в scope outbox
 - [`spring-transactional-outbox-kafka`](https://github.com/KHolodilin/spring-transactional-outbox-kafka) — reference / будущий consumer стартера
 
 **Changelog 1.1:** multi-channel first-class (несколько независимых outbox pipeline в одном МС), table-per-channel, `@OutboxChannelSink`, обновлены API / config / demos / tests.  
-**Changelog 1.2:** observability — tag `eventType` на event-level метриках (кроме queue gauges).
+**Changelog 1.2:** observability — tag `eventType` на event-level метриках (кроме queue gauges).  
+**Changelog 1.3:** JSON SPI `OutboxJson` (Jackson убран из core/JDBC); `spring-boot-outbox-starter-boot3` (Boot 3.2+, Jackson 2); версия 0.2.0.
 
 ---
 
@@ -40,7 +41,7 @@ channel → table → dispatch queue → publisher worker → OutboxSink
 
 | ID | Требование |
 |----|------------|
-| NFR-1 | Java 21+, Spring Boot 4.1.x |
+| NFR-1 | Java 21+, Spring Boot 4.1.x **или** Spring Boot 3.2+ (отдельный starter) |
 | NFR-2 | PostgreSQL как source of truth для outbox rows |
 | NFR-3 | At-least-once delivery; идемпотентность на стороне consumer/sink target |
 | NFR-4 | Multi-instance safe claim через `FOR UPDATE SKIP LOCKED` + lease |
@@ -59,8 +60,9 @@ channel → table → dispatch queue → publisher worker → OutboxSink
 |---|---|
 | GitHub repo | `spring-boot-outbox-starter` |
 | Parent GAV | `com.kholodilin:spring-boot-outbox-starter-parent` |
-| Starter artifact | `com.kholodilin:spring-boot-outbox-starter` |
-| First version | `0.1.0-SNAPSHOT` in POMs; README / Maven Central use `0.1.0` on release |
+| Starter artifact (Boot 4) | `com.kholodilin:spring-boot-outbox-starter` |
+| Starter artifact (Boot 3.2+) | `com.kholodilin:spring-boot-outbox-starter-boot3` |
+| Version | `0.2.0` (JSON SPI; not a 0.1.x patch) |
 
 ---
 
@@ -72,7 +74,8 @@ spring-boot-outbox-starter-parent
 ├── outbox-persistence-jdbc
 ├── outbox-queue-memory
 ├── outbox-queue-redis                 # optional
-├── outbox-spring-boot-starter         # artifactId: spring-boot-outbox-starter
+├── outbox-spring-boot-starter         # artifactId: spring-boot-outbox-starter (Boot 4, Jackson 3)
+├── outbox-spring-boot-starter-boot3   # artifactId: spring-boot-outbox-starter-boot3 (Boot 3.2+, Jackson 2)
 ├── outbox-demo-kafka
 └── outbox-demo-rest
 ```
@@ -83,8 +86,9 @@ spring-boot-outbox-starter-parent
 | `outbox-persistence-jdbc` | `OutboxStore` на JDBC/PostgreSQL, DDL template per table, schema create/validate |
 | `outbox-queue-memory` | Default `OutboxDispatchQueue` (per-process, per-channel instance) |
 | `outbox-queue-redis` | Shared wake-up queue (fail-open), отдельный key-prefix на channel |
-| `spring-boot-outbox-starter` | Auto-configuration, channels properties, Micrometer, health |
-| `outbox-demo-kafka` | Demo: 1 channel `default` + Kafka `OutboxSink` |
+| `spring-boot-outbox-starter` | Auto-configuration Boot 4.x, Jackson 3, Micrometer, health |
+| `spring-boot-outbox-starter-boot3` | Auto-configuration Boot 3.2+, Jackson 2, actuate health; smoke IT вместо demo |
+| `outbox-demo-kafka` | Demo: 1 channel `default` + Kafka `OutboxSink` (Boot 4) |
 | `outbox-demo-rest` | Demo: **2 channels** (`payments` + `webhooks`) — Kafka/stub + REST |
 
 **Явно отсутствует в v1:** `outbox-sink-kafka` как обязательный модуль стартера.  
@@ -311,7 +315,7 @@ public interface OutboxAppend {
     OutboxAppend aggregateId(String aggregateId);
     OutboxAppend partitionKey(String partitionKey);
     OutboxAppend payload(String json);
-    OutboxAppend payload(Object value);           // Jackson serialize → jsonb
+    OutboxAppend payload(Object value);           // OutboxJson.toJson → jsonb
     OutboxAppend header(String name, String value);
     OutboxAppend headers(Map<String, String> headers);
     OutboxAppend traceParent(String traceParent);

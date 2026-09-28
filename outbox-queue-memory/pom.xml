@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.kholodilin</groupId>
         <artifactId>spring-boot-outbox-starter-parent</artifactId>
-        <version>0.1.4-SNAPSHOT</version>
+        <version>0.2.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>outbox-queue-memory</artifactId>
@@ -37,4 +37,41 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>ban-jackson</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <bannedDependencies>
+                                    <excludes>
+                                        <exclude>tools.jackson.core:*</exclude>
+                                        <exclude>tools.jackson.databind:*</exclude>
+                                        <exclude>com.fasterxml.jackson.core:*</exclude>
+                                        <exclude>com.fasterxml.jackson.databind:*</exclude>
+                                        <exclude>com.fasterxml.jackson.dataformat:*</exclude>
+                                        <exclude>com.fasterxml.jackson.datatype:*</exclude>
+                                        <exclude>com.fasterxml.jackson.module:*</exclude>
+                                    </excludes>
+                                    <includes>
+                                        <include>*:*:*:*:test</include>
+                                    </includes>
+                                    <searchTransitive>true</searchTransitive>
+                                    <message>Jackson is forbidden in compile/runtime of this module; use OutboxJson.</message>
+                                </bannedDependencies>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>
