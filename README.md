@@ -65,7 +65,7 @@ If `outbox.channels` is empty, an implicit channel `default` (table `outbox_even
 <dependency>
   <groupId>com.kholodilin</groupId>
   <artifactId>spring-boot-outbox-starter</artifactId>
-  <version>0.2.0</version>
+  <version>0.2.1</version>
 </dependency>
 ```
 
@@ -75,7 +75,7 @@ If `outbox.channels` is empty, an implicit channel `default` (table `outbox_even
 <dependency>
   <groupId>com.kholodilin</groupId>
   <artifactId>spring-boot-outbox-starter-boot3</artifactId>
-  <version>0.2.0</version>
+  <version>0.2.1</version>
 </dependency>
 ```
 
@@ -241,8 +241,8 @@ to fix), environment constraints (Maven Enforcer), javadoc validity and a minimu
 Push a tag — CI publishes signed artifacts to Maven Central and creates a GitHub Release:
 
 ```bash
-git tag v0.2.0
-git push origin v0.2.0
+git tag v0.2.1
+git push origin v0.2.1
 ```
 
 ## License
