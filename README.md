@@ -1,17 +1,6 @@
 # Spring Boot Outbox Starter
 
-[![codecov](https://codecov.io/gh/KHolodilin/spring-boot-outbox-starter/branch/main/graph/badge.svg)](https://codecov.io/gh/KHolodilin/spring-boot-outbox-starter)
-[![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://openjdk.org/projects/jdk/21/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1-brightgreen.svg)](https://spring.io/projects/spring-boot)
-[![Spring Boot 3](https://img.shields.io/badge/Spring%20Boot-3.2%2B-brightgreen.svg)](https://spring.io/projects/spring-boot)
-
-[![Maven Central](https://img.shields.io/maven-central/v/com.kholodilin/spring-boot-outbox-starter.svg?label=boot4)](https://central.sonatype.com/artifact/com.kholodilin/spring-boot-outbox-starter)
-[![Scarf: Downloads](https://api.scarf.sh/v2/packages/KHolodilin/0f827d34-6df8-459b-aa82-3d102ae624bd/downloads-badge)](https://scarf.sh)
-[![Scarf: Commercial Users](https://api.scarf.sh/v2/packages/KHolodilin/0f827d34-6df8-459b-aa82-3d102ae624bd/commercial-users-badge)](https://scarf.sh)
-
-[![Maven Central Boot 3](https://img.shields.io/maven-central/v/com.kholodilin/spring-boot-outbox-starter-boot3.svg?label=boot3)](https://central.sonatype.com/artifact/com.kholodilin/spring-boot-outbox-starter-boot3)
-[![Scarf: Downloads](https://api.scarf.sh/v2/packages/KHolodilin/8cf2e5da-05cf-40f1-8dce-d4520128c793/downloads-badge)](https://scarf.sh)
-[![Scarf: Commercial Users](https://api.scarf.sh/v2/packages/KHolodilin/8cf2e5da-05cf-40f1-8dce-d4520128c793/commercial-users-badge)](https://scarf.sh)
+[![codecov](https://codecov.io/gh/KHolodilin/spring-boot-outbox-starter/branch/main/graph/badge.svg)](https://codecov.io/gh/KHolodilin/spring-boot-outbox-starter) [![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://openjdk.org/projects/jdk/21/) [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1-brightgreen.svg)](https://spring.io/projects/spring-boot) [![Spring Boot 3](https://img.shields.io/badge/Spring%20Boot-3.2%2B-brightgreen.svg)](https://spring.io/projects/spring-boot) [![Maven Central](https://img.shields.io/maven-central/v/com.kholodilin/spring-boot-outbox-starter.svg?label=boot4)](https://central.sonatype.com/artifact/com.kholodilin/spring-boot-outbox-starter) [![Scarf: Downloads](https://api.scarf.sh/v2/packages/KHolodilin/0f827d34-6df8-459b-aa82-3d102ae624bd/downloads-badge)](https://scarf.sh) [![Scarf: Commercial Users](https://api.scarf.sh/v2/packages/KHolodilin/0f827d34-6df8-459b-aa82-3d102ae624bd/commercial-users-badge)](https://scarf.sh) [![Maven Central Boot 3](https://img.shields.io/maven-central/v/com.kholodilin/spring-boot-outbox-starter-boot3.svg?label=boot3)](https://central.sonatype.com/artifact/com.kholodilin/spring-boot-outbox-starter-boot3) [![Scarf: Downloads](https://api.scarf.sh/v2/packages/KHolodilin/8cf2e5da-05cf-40f1-8dce-d4520128c793/downloads-badge)](https://scarf.sh) [![Scarf: Commercial Users](https://api.scarf.sh/v2/packages/KHolodilin/8cf2e5da-05cf-40f1-8dce-d4520128c793/commercial-users-badge)](https://scarf.sh)
 
 Transactional Outbox for Java 21 with **multi-channel** pipelines, PostgreSQL as source of truth, and memory or Redis wake-up queues. One SPI, two Spring Boot wrappers — pick **one** starter.
 
