@@ -25,13 +25,7 @@ public enum OutboxStatus {
     private final int code;
 
     private static final Map<Integer, OutboxStatus> BY_CODE =
-            Stream.of(values())
-                    .collect(
-                            Collectors.toMap(
-                                    status -> status.code,
-                                    Function.identity()
-                            )
-                    );
+            Stream.of(values()).collect(Collectors.toMap(status -> status.code, Function.identity()));
 
     OutboxStatus(int code) {
         this.code = code;

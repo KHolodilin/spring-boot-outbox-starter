@@ -22,11 +22,10 @@ class OutboxStatusTest {
 
     @Test
     void fromCodeRoundTrip() {
-        for(OutboxStatus status : OutboxStatus.values()) {
+        for (OutboxStatus status : OutboxStatus.values()) {
             assertThat(OutboxStatus.fromCode(status.getCode())).isEqualTo(status);
         }
 
-        assertThatThrownBy(() -> OutboxStatus.fromCode(999))
-                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> OutboxStatus.fromCode(999)).isInstanceOf(IllegalArgumentException.class);
     }
 }
