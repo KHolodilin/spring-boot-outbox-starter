@@ -1,5 +1,10 @@
 package com.kholodilin.outbox.model;
 
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 /**
  * Outbox row lifecycle statuses.
  *
@@ -12,10 +17,15 @@ public enum OutboxStatus {
     DEAD(101),
     SENT(110);
 
-    /** Partition boundary: statuses below this value live in the ACTIVE partition. */
+    /**
+     * Partition boundary: statuses below this value live in the ACTIVE partition.
+     */
     public static final int ARCHIVE_THRESHOLD = 100;
 
     private final int code;
+
+    private static final Map<Integer, OutboxStatus> BY_CODE =
+            Stream.of(values()).collect(Collectors.toMap(status -> status.code, Function.identity()));
 
     OutboxStatus(int code) {
         this.code = code;
@@ -30,11 +40,11 @@ public enum OutboxStatus {
     }
 
     public static OutboxStatus fromCode(int code) {
-        for (OutboxStatus status : values()) {
-            if (status.code == code) {
-                return status;
-            }
+        OutboxStatus status = BY_CODE.get(code);
+
+        if (status == null) {
+            throw new IllegalArgumentException("Unknown outbox status code: " + code);
         }
-        throw new IllegalArgumentException("Unknown outbox status code: " + code);
+        return status;
     }
 }
